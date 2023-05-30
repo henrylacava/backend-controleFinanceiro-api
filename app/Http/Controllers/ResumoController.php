@@ -25,12 +25,16 @@ class ResumoController extends Controller
         $receita_soma = Receita::whereRaw('YEAR(data) = ?', [$ano])->whereRaw('MONTH(data) = ?', [$mes])->sum('valor');
         $despesa_soma = Despesa::whereRaw('YEAR(data) = ?', [$ano])->whereRaw('MONTH(data) = ?', [$mes])->sum('valor');
         $saldo_final = $receita_soma - $despesa_soma;
-        for ($i = 1; $i <= 7; $i++){
-            $despesa_categoria = Despesa::where('categoria_id', $i)->get(['categoria_id','valor']);
+        $despesa_categoria = Despesa::whereIn('categoria_id', range(1,7))->select('categoria_id', 'valor')->get();
 
-            if (!$despesa_categoria->isEmpty()){
-                return response()->json([$receita_soma, $despesa_soma, $saldo_final, $despesa_categoria], 200);
-            }
-        }
+        if ($despesa_categoria){
+            $data = [
+                (object) ['chave' => 'receita_soma', 'valor' => $receita_soma],
+                (object) ['chave' => 'despesa_soma', 'valor' => $despesa_soma],
+                (object) ['chave' => 'saldo_final', 'valor' => $saldo_final],
+                (object) ['chave' => 'despesa_categoria', 'valor' => $despesa_categoria]
+            ];
+            return response()->json($data, 200);
+         }
     }
 }
