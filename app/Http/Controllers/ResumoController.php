@@ -20,12 +20,16 @@ class ResumoController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 400);
-        } 
+        }
 
         $receita_soma = Receita::whereRaw('YEAR(data) = ?', [$ano])->whereRaw('MONTH(data) = ?', [$mes])->sum('valor');
         $despesa_soma = Despesa::whereRaw('YEAR(data) = ?', [$ano])->whereRaw('MONTH(data) = ?', [$mes])->sum('valor');
         $saldo_final = $receita_soma - $despesa_soma;
-        $despesa_categoria = Despesa::whereIn('categoria_id', range(1,7))->select('categoria_id', 'valor')->get();
+        $despesa_categoria = Despesa::whereIn('categoria_id', range(1,7))
+            ->select('categoria_id', 'valor')
+            ->whereRaw('YEAR(data) = ?', [$ano])
+            ->whereRaw('MONTH(data) = ?', [$mes])
+            ->get();
 
         if ($despesa_categoria){
             $data = [
